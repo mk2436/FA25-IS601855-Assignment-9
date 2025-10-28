@@ -8,12 +8,42 @@ from fastapi.exceptions import RequestValidationError
 from app.operations import add, subtract, multiply, divide  # Ensure correct import path
 import uvicorn
 import logging
+import sys
+from datetime import datetime
+import json
+from logging_config import setup_logging, get_logger, StructuredLogger
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Configure comprehensive logging
+logger = setup_logging(
+    log_level="INFO",
+    log_file="logs/app.log",
+    enable_colors=True
+)
+structured_logger = StructuredLogger(logger)
+
+logger.info("FastAPI Calculator Application starting up...")
 
 app = FastAPI()
+
+# Add request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Middleware to log all incoming requests."""
+    start_time = datetime.utcnow()
+    
+    # Log the incoming request
+    client_ip = request.client.host if request.client else 'unknown'
+    user_agent = request.headers.get('user-agent', 'unknown')
+    structured_logger.log_request(request.method, str(request.url.path), client_ip, user_agent)
+    
+    # Process the request
+    response = await call_next(request)
+    
+    # Log the response
+    process_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+    logger.info(f"Request completed: {request.method} {request.url.path} - Status: {response.status_code} - Time: {process_time:.2f}ms")
+    
+    return response
 
 # Setup templates directory
 templates = Jinja2Templates(directory="templates")
@@ -238,7 +268,11 @@ async def read_root(request: Request):
     ---------
     Visiting http://localhost:8000/ will display the calculator web interface.
     """
-    return templates.TemplateResponse("index.html", {"request": request})
+    try:
+        return templates.TemplateResponse("index.html", {"request": request})
+    except Exception as e:
+        logger.error(f"Failed to render homepage: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.post("/add", response_model=OperationResponse, responses={400: {"model": ErrorResponse}})
 async def add_route(operation: OperationRequest):
@@ -274,11 +308,13 @@ async def add_route(operation: OperationRequest):
     Request: {"a": 2.5, "b": 3.7}
     Response: {"result": 6.2}
     """
+    logger.info(f"Addition request: {operation.a} + {operation.b}")
     try:
         result = add(operation.a, operation.b)
+        structured_logger.log_operation("add", operation.a, operation.b, result)
         return OperationResponse(result=result)
     except Exception as e:
-        logger.error(f"Add Operation Error: {str(e)}")  
+        structured_logger.log_error("add", str(e), {"operand_a": operation.a, "operand_b": operation.b})
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/subtract", response_model=OperationResponse, responses={400: {"model": ErrorResponse}})
@@ -315,11 +351,13 @@ async def subtract_route(operation: OperationRequest):
     Request: {"a": 5.5, "b": 2.5}
     Response: {"result": 3.0}
     """
+    logger.info(f"Subtraction request: {operation.a} - {operation.b}")
     try:
         result = subtract(operation.a, operation.b)
+        structured_logger.log_operation("subtract", operation.a, operation.b, result)
         return OperationResponse(result=result)
     except Exception as e:
-        logger.error(f"Subtract Operation Error: {str(e)}")
+        structured_logger.log_error("subtract", str(e), {"operand_a": operation.a, "operand_b": operation.b})
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/multiply", response_model=OperationResponse, responses={400: {"model": ErrorResponse}})
@@ -356,11 +394,13 @@ async def multiply_route(operation: OperationRequest):
     Request: {"a": 2.5, "b": 4}
     Response: {"result": 10.0}
     """
+    logger.info(f"Multiplication request: {operation.a} * {operation.b}")
     try:
         result = multiply(operation.a, operation.b)
+        structured_logger.log_operation("multiply", operation.a, operation.b, result)
         return OperationResponse(result=result)
     except Exception as e:
-        logger.error(f"Multiply Operation Error: {str(e)}")
+        structured_logger.log_error("multiply", str(e), {"operand_a": operation.a, "operand_b": operation.b})
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/divide", response_model=OperationResponse, responses={400: {"model": ErrorResponse}})
@@ -402,14 +442,16 @@ async def divide_route(operation: OperationRequest):
     Request: {"a": 10, "b": 0}
     Response: 400 Error with "Cannot divide by zero!"
     """
+    logger.info(f"Division request: {operation.a} / {operation.b}")
     try:
         result = divide(operation.a, operation.b)
+        structured_logger.log_operation("divide", operation.a, operation.b, result)
         return OperationResponse(result=result)
     except ValueError as e:
-        logger.error(f"Divide Operation Error: {str(e)}")
+        structured_logger.log_error("divide", str(e), {"operand_a": operation.a, "operand_b": operation.b})
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Divide Operation Internal Error: {str(e)}")
+        structured_logger.log_error("divide", str(e), {"operand_a": operation.a, "operand_b": operation.b})
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 if __name__ == "__main__":

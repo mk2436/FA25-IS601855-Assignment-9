@@ -19,6 +19,10 @@ to perform arithmetic operations based on user input.
 """
 
 from typing import Union  # Import Union for type hinting multiple possible types
+import logging
+
+# Setup logger for operations module
+logger = logging.getLogger(__name__)
 
 # Define a type alias for numbers that can be either int or float
 Number = Union[int, float]
@@ -40,9 +44,15 @@ def add(a: Number, b: Number) -> Number:
     >>> add(2.5, 3)
     5.5
     """
-    # Perform addition of a and b
-    result = a + b
-    return result
+    logger.debug(f"Adding {a} + {b}")
+    try:
+        # Perform addition of a and b
+        result = a + b
+        logger.info(f"Addition successful: {a} + {b} = {result}")
+        return result
+    except Exception as e:  # pragma: no cover
+        logger.error(f"Addition failed for {a} + {b}: {str(e)}")    # pragma: no cover
+        raise   # pragma: no cover
 
 def subtract(a: Number, b: Number) -> Number:
     """
@@ -61,9 +71,15 @@ def subtract(a: Number, b: Number) -> Number:
     >>> subtract(5.5, 2)
     3.5
     """
-    # Perform subtraction of b from a
-    result = a - b
-    return result
+    logger.debug(f"Subtracting {a} - {b}")
+    try:
+        # Perform subtraction of b from a
+        result = a - b
+        logger.info(f"Subtraction successful: {a} - {b} = {result}")
+        return result
+    except Exception as e:  # pragma: no cover
+        logger.error(f"Subtraction failed for {a} - {b}: {str(e)}")  # pragma: no cover
+        raise  # pragma: no cover
 
 def multiply(a: Number, b: Number) -> Number:
     """
@@ -82,9 +98,15 @@ def multiply(a: Number, b: Number) -> Number:
     >>> multiply(2.5, 4)
     10.0
     """
-    # Perform multiplication of a and b
-    result = a * b
-    return result
+    logger.debug(f"Multiplying {a} * {b}")
+    try:
+        # Perform multiplication of a and b
+        result = a * b
+        logger.info(f"Multiplication successful: {a} * {b} = {result}")
+        return result
+    except Exception as e:  # pragma: no cover
+        logger.error(f"Multiplication failed for {a} * {b}: {str(e)}")  # pragma: no cover
+        raise  # pragma: no cover
 
 def divide(a: Number, b: Number) -> float:
     """
@@ -110,11 +132,21 @@ def divide(a: Number, b: Number) -> float:
         ...
     ValueError: Cannot divide by zero!
     """
-    # Check if the divisor is zero to prevent division by zero
-    if b == 0:
-        # Raise a ValueError with a descriptive message
-        raise ValueError("Cannot divide by zero!")
-    
-    # Perform division of a by b and return the result as a float
-    result = a / b
-    return result
+    logger.debug(f"Dividing {a} / {b}")
+    try:
+        # Check if the divisor is zero to prevent division by zero
+        if b == 0:
+            logger.error(f"Division by zero attempted: {a} / {b}")
+            # Raise a ValueError with a descriptive message
+            raise ValueError("Cannot divide by zero!")
+        
+        # Perform division of a by b and return the result as a float
+        result = a / b
+        logger.info(f"Division successful: {a} / {b} = {result}")
+        return result
+    except ValueError as ve:
+        logger.error(f"Division by zero error: {str(ve)}")
+        raise  # pragma: no cover
+    except Exception as e:  # pragma: no cover
+        logger.error(f"Division failed for {a} / {b}: {str(e)}")
+        raise  # pragma: no cover
