@@ -2,9 +2,9 @@ name: Docker CI/CD Pipeline
 
 on:
  push:
-   branches: [ main ]
+   branches: [ playwright-dep-fix ]
  pull_request:
-   branches: [ main ]
+   branches: [ playwright-dep-fix ]
  workflow_dispatch:
 
 jobs:
@@ -38,6 +38,9 @@ jobs:
          source venv/bin/activate
          pip install --upgrade pip
          pip install -r requirements.txt
+     
+     - name: Install dependencies
+       run: |
          playwright install
          playwright install --with-deps
 
