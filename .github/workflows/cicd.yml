@@ -39,14 +39,10 @@ jobs:
          pip install --upgrade pip
          pip install -r requirements.txt
      
-     - name: Install Playwright dependencies
+     - name: Install Playwright browsers
        run: |
-         npx playwright install
-         npx playwright install --with-deps
-     
-     - name: Update Plawright dependencies
-       run: |
-         playwright install
+         source venv/bin/activate
+         python -m playwright install --with-deps
 
      - name: Run tests
        run: |
