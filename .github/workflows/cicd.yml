@@ -41,8 +41,8 @@ jobs:
      
      - name: Install dependencies
        run: |
-         pip playwright install
-         pip playwright install --with-deps
+         npx playwright install
+         npx playwright install --with-deps
 
      - name: Run tests
        run: |
