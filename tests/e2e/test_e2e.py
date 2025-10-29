@@ -69,16 +69,17 @@ def test_calculator_add_parametrized(page, fastapi_server, a, b, expected):
     # Click the button that has the exact text "Add". This triggers the addition operation.
     page.click('button:text("Add")')
     
+    # Wait for result to be displayed
+    page.wait_for_function("document.querySelector('#result').innerText.trim() !== ''")
+
     # Get the text within the result div (with id 'result').
     result_text = page.inner_text('#result')
-    # Extract just the number part (remove "Calculation Result: ").
     # Extract just the number part (remove "Calculation Result: ")
     result_value = result_text.replace('Calculation Result: ', '')
-    
     # Convert to float for comparison to handle precision
     actual = float(result_value)
+    # Convert to float for comparison to handle precision
     expected_float = float(expected)
-    
     # Use tolerance for floating point comparisons
     assert abs(actual - expected_float) < 1e-10 or actual == expected_float, \
         f"Expected {expected_float}, but got {actual}"
@@ -124,6 +125,9 @@ def test_calculator_subtract_parametrized(page, fastapi_server, a, b, expected):
     page.fill('#b', b)
     # Click the button that has the exact text "Subtract". This triggers the subtraction operation.
     page.click('button:text("Subtract")')
+    
+    # Wait for result to be displayed
+    page.wait_for_function("document.querySelector('#result').innerText.trim() !== ''")
     
     # Get the text within the result div (with id 'result').
     result_text = page.inner_text('#result')
@@ -178,6 +182,10 @@ def test_calculator_multiply_parametrized(page, fastapi_server, a, b, expected):
     page.fill('#b', b)
     # Click the button that has the exact text "Multiply". This triggers the multiplication operation.
     page.click('button:text("Multiply")')
+
+    # Wait for result to be displayed
+    page.wait_for_function("document.querySelector('#result').innerText.trim() !== ''")
+
     
     # Get the text within the result div (with id 'result').
     result_text = page.inner_text('#result')
@@ -231,6 +239,10 @@ def test_calculator_divide_parametrized(page, fastapi_server, a, b, expected):
     page.fill('#b', b)
     # Click the button that has the exact text "Divide". This triggers the division operation.
     page.click('button:text("Divide")')
+
+    # Wait for result to be displayed
+    page.wait_for_function("document.querySelector('#result').innerText.trim() !== ''")
+
     
     # Get the text within the result div (with id 'result').
     result_text = page.inner_text('#result')
@@ -269,6 +281,10 @@ def test_calculator_divide_by_zero_variations(page, fastapi_server, value):
     page.fill('#b', value)
     # Click the button that has the exact text "Divide". This triggers the division operation.
     page.click('button:text("Divide")')
+
+    # Wait for result to be displayed
+    page.wait_for_function("document.querySelector('#result').innerText.trim() !== ''")
+
     
     # Use an assertion to check that the text within the result div (with id 'result') is exactly "Error: Cannot divide by zero!".
     # This verifies that the application correctly handles division by zero and displays the appropriate error message to the user.
