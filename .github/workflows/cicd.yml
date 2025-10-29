@@ -38,8 +38,8 @@ jobs:
          source venv/bin/activate
          pip install --upgrade pip
          pip install -r requirements.txt
-         npx playwright install
-         npx playwright install --with-deps
+         playwright install
+         playwright install --with-deps
 
      - name: Run tests
        run: |
