@@ -13,7 +13,9 @@ version: '3.8'  # Specify the version of Docker Compose syntax to use.
 
 # Services Definition
 services:
-  # Service: web
+  # ---------------------------------------------
+  # Web Service
+  # ---------------------------------------------
   web:
     # Build Configuration
     build: .  # Instructs Docker Compose to build the Docker image using the Dockerfile located in the current directory (denoted by '.').
@@ -33,7 +35,8 @@ services:
     environment:
       - PYTHONDONTWRITEBYTECODE=1  # Prevents Python from writing `.pyc` files to disk. This ensures that only source code is maintained, keeping the container clean.
       - PYTHONUNBUFFERED=1  # Forces Python to flush the output buffer immediately. This is useful for real-time logging, ensuring that logs are visible as they are generated.
-    
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/fastapi_db
+
     # Command Execution
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload  
       # Specifies the command to run when the container starts.
@@ -42,6 +45,98 @@ services:
       # - `--host 0.0.0.0`: Binds the server to all network interfaces, making it accessible externally.
       # - `--port 8000`: Sets the port on which the server will listen inside the container.
       # - `--reload`: Enables automatic reloading of the server when code changes are detected. This is particularly useful during development for immediate feedback without manual restarts.
+    
+    # Dependencies
+    depends_on:
+      - db # Waits for the database service to be healthy before starting the web service.
+
+    # Networks
+    networks:
+      - app-network # Connects the container to the "app-network" network. This allows the container to communicate with other containers on the same network.
+
+
+
+
+  # ---------------------------------------------
+  # Database Service (PostgreSQL)
+  # ---------------------------------------------
+  db:
+    # base image
+    image: postgres # Specifies the base image to use for the container.
+
+    # container name
+    container_name: postgres_db # Specifies the name of the container.
+    
+    # environment variables
+    environment:
+      POSTGRES_USER: postgres # Specifies the username for the PostgreSQL database.
+      POSTGRES_PASSWORD: postgres # Specifies the password for the PostgreSQL database.
+      POSTGRES_DB: fastapi_db # Specifies the name of the database to create when the container starts.
+    
+    # port mapping
+    ports:
+      - "5432:5432" # Maps port 5432 on the host machine to port 5432 in the Docker container. This allows access to the PostgreSQL database via localhost:5432 on the host.
+    
+    # volume mounting
+    volumes:
+      - postgres_data:/var/lib/postgresql # Mounts the volume to the `/var/lib/postgresql` directory inside the container. This allows the container to store data on the local machine.
+    
+    # healthcheck
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"] # Checks if the PostgreSQL database is ready to accept connections.
+      interval: 10s # Checks the health of the database every 10 seconds.
+      timeout: 5s # Waits for 5 seconds for the database to respond.
+      retries: 5 # Retries the health check 5 times before marking the service as unhealthy.
+    
+    # networks
+    networks:
+      - app-network # Connects the container to the "app-network" network. This allows the container to communicate with other containers on the same network.
+  
+
+  # ---------------------------------------------
+  # pgadmin Service
+  # ---------------------------------------------
+  pgadmin:
+    # base image
+    image: dpage/pgadmin4  # Specifies the base image to use for the container.
+    
+    # container name
+    container_name: pgadmin # Specifies the name of the container.
+    
+    # environment variables
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com # Specifies the email for the pgadmin service.
+      PGADMIN_DEFAULT_PASSWORD: admin # Specifies the password for the pgadmin service.
+    
+    # port mapping
+    ports:
+      - "5050:80"  # Maps port 5050 on the host machine to port 80 in the Docker container. This allows access to the pgadmin service via localhost:5050 on the host.
+    
+    # volume mounting
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin # Mounts the volume to the `/var/lib/pgadmin` directory inside the container. This allows the container to store data on the local machine.
+    
+    # dependencies
+    depends_on:
+      db: # Waits for the database service to be healthy before starting the pgadmin service.
+        condition: service_healthy # Waits for the database service to be healthy before starting the pgadmin service.
+    
+    # networks
+    networks:
+      - app-network # Connects the container to the "app-network" network. This allows the container to communicate with other containers on the same network.
+
+# volumes
+volumes:
+  postgres_data: # Volume for PostgreSQL data
+    driver: local # Uses the local driver for the volume. This means the volume is stored on the local machine.
+  pgadmin_data: # Volume for pgadmin data
+    driver: local # Uses the local driver for the volume. This means the volume is stored on the local machine.
+
+# networks
+networks:
+  app-network: # Network for the application
+    driver: bridge # Uses the bridge driver for the network.
+
 
 # ---------------------------------------------
 # Detailed Explanation of Each Component
