@@ -11,7 +11,7 @@ import logging
 import sys
 from datetime import datetime
 import json
-from logging_config import setup_logging, get_logger, StructuredLogger
+from app.logger_module import setup_logging, get_logger, StructuredLogger
 
 # Configure comprehensive logging
 logger = setup_logging(
