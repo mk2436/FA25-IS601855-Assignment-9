@@ -6,27 +6,8 @@ import pytest
 from playwright.sync_api import sync_playwright
 import requests
 import logging
-from test_logging_config import setup_test_logging, setup_integration_test_logging, setup_e2e_test_logging
+#from tests.test_logger import setup_test_logging, setup_integration_test_logging, setup_e2e_test_logging
 
-
-@pytest.fixture(scope="session", autouse=True)
-def setup_logging_for_tests():
-    """
-    Set up logging for all tests based on the test type.
-    """
-    # Determine test type based on the test file path
-    import os
-    test_file = os.environ.get('PYTEST_CURRENT_TEST', '')
-    
-    if 'e2e' in test_file:
-        logger = setup_e2e_test_logging()
-    elif 'integration' in test_file:
-        logger = setup_integration_test_logging()
-    else:
-        logger = setup_test_logging()
-    
-    logger.info("Test logging configured")
-    return logger
 
 
 @pytest.fixture(scope='session')
