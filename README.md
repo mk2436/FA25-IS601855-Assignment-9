@@ -458,6 +458,130 @@ chmod +x scripts/*
 
 ---
 
+## 🗃️ Database Setup and SQL Queries
+
+Below are the SQL queries used to set up and manage the **users** and **calculations** tables for the FastAPI Calculator application.
+
+---
+
+### 🧩 (A) Create Tables
+
+The following queries create two tables:
+- `users`: stores user information.  
+- `calculations`: stores calculation history linked to a specific user.
+
+```bash
+# Create 'users' table
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+# Create 'calculations' table
+CREATE TABLE calculations (
+    id SERIAL PRIMARY KEY,
+    operation VARCHAR(20) NOT NULL,
+    operand_a FLOAT NOT NULL,
+    operand_b FLOAT NOT NULL,
+    result FLOAT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    user_id INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+```
+
+💡 **Explanation:**  
+- `SERIAL` auto-generates unique IDs.  
+- `ON DELETE CASCADE` ensures that when a user is deleted, their calculations are also removed automatically.  
+- `TIMESTAMP DEFAULT CURRENT_TIMESTAMP` records the creation time.
+
+---
+
+### 🧮 (B) Insert Records
+
+Add sample users and calculations for testing.
+
+```bash
+# Insert user records
+INSERT INTO users (username, email)
+VALUES
+('alice', 'alice@example.com'),
+('bob', 'bob@example.com');
+
+# Insert calculation records
+INSERT INTO calculations (operation, operand_a, operand_b, result, user_id)
+VALUES
+('add', 2, 3, 5, 1),
+('divide', 10, 2, 5, 1),
+('multiply', 4, 5, 20, 2);
+```
+
+💡 **Explanation:**  
+- Each `calculation` entry includes the `operation`, `operands`, and `result`.  
+- The `user_id` column links each calculation to its user.
+
+---
+
+### 🔍 (C) Query Data
+
+Retrieve and explore data from the database.
+
+```bash
+# Retrieve all users
+SELECT * FROM users;
+
+# Retrieve all calculations
+SELECT * FROM calculations;
+
+# Join users and calculations to see who performed which operation
+SELECT u.username, c.operation, c.operand_a, c.operand_b, c.result
+FROM calculations c
+JOIN users u ON c.user_id = u.id;
+```
+
+💡 **Explanation:**  
+The `JOIN` statement combines data from both tables, allowing you to display each user's calculation history.
+
+---
+
+### ✏️ (D) Update a Record
+
+Update existing calculation data if a result changes.
+
+```bash
+# Update a calculation result
+UPDATE calculations
+SET result = 6
+WHERE id = 1;
+```
+
+💡 **Explanation:**  
+Use the `WHERE` clause carefully — without it, all rows would be updated.
+
+---
+
+### ❌ (E) Delete a Record
+
+Remove a specific calculation or user.
+
+```bash
+# Delete a single calculation
+DELETE FROM calculations
+WHERE id = 2;
+
+# Delete a user (and all their calculations via CASCADE)
+DELETE FROM users
+WHERE id = 1;
+```
+
+💡 **Explanation:**  
+- Deleting a user will automatically remove all related calculations because of the **foreign key cascade** rule.
+
+
+---
+
 
 # 📋 Notes
 
